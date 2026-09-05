@@ -1,5 +1,6 @@
 package com.example.ui.theme
 
+import android.util.Log
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -8,7 +9,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.R
 
-// Detect host JVM / Robolectric unit test environment to safely fallback to system font in CI
+private const val TAG = "FontLoading"
+
+// 🔒 كشف بيئة الاختبار بأمان
 private val isHostUnitTest: Boolean by lazy {
     try {
         Class.forName("org.robolectric.RobolectricTestRunner") != null
@@ -17,17 +20,19 @@ private val isHostUnitTest: Boolean by lazy {
     }
 }
 
-// Tajawal Font Family for beautiful and modern Arabic typography
-val TajawalFontFamily: FontFamily = if (isHostUnitTest) {
-    FontFamily.Default
-} else {
-    FontFamily(
-        Font(resId = R.font.tajawal_regular, weight = FontWeight.Normal),
-        Font(resId = R.font.tajawal_medium, weight = FontWeight.Medium),
-        Font(resId = R.font.tajawal_medium, weight = FontWeight.SemiBold),
-        Font(resId = R.font.tajawal_bold, weight = FontWeight.Bold),
-        Font(resId = R.font.tajawal_bold, weight = FontWeight.ExtraBold)
-    )
+/**
+ * ✅ عائلة خطوط آمنة مع معالجة استثناءات كاملة
+ * يستخدم FontLoader للتحميل الآمن
+ */
+val TajawalFontFamily: FontFamily by lazy {
+    FontLoader.buildSafeFontFamily(isInUnitTest = isHostUnitTest).also { fontFamily ->
+        if (fontFamily == FontFamily.Default) {
+            Log.w(TAG, "⚠️ Using system default font - custom fonts unavailable")
+            Log.w(TAG, "Error: ${FontLoader.getLastError()}")
+        } else {
+            Log.i(TAG, "✅ TajawalFontFamily loaded successfully")
+        }
+    }
 }
 
 val Typography = Typography(
